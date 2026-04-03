@@ -246,6 +246,15 @@ namespace Stride.Graphics
         /// <param name="renderTargetViews">The Render Targets to bind.</param>
         private partial void SetRenderTargetsImpl(Texture depthStencilBuffer, ReadOnlySpan<Texture> renderTargetViews)
         {
+            // Transition render targets and depth-stencil to the correct state
+            for (int i = 0; i < renderTargetViews.Length; ++i)
+                ResourceBarrierTransition(renderTargetViews[i], GraphicsResourceState.RenderTarget);
+
+            if (depthStencilBuffer is not null)
+                ResourceBarrierTransition(depthStencilBuffer, GraphicsResourceState.DepthWrite);
+
+            FlushResourceBarriers();
+
             int renderTargetCount = renderTargetViews.Length;
 
             var renderTargetHandles = stackalloc CpuDescriptorHandle[renderTargetCount];
@@ -1018,6 +1027,9 @@ namespace Stride.Graphics
             if (buffer.NativeUnorderedAccessView.Ptr == 0)
                 throw new ArgumentException("Expecting a Buffer supporting UAV", nameof(buffer));
 
+            using var _ = ResourceBarrierTransitionAndRestore(buffer, GraphicsResourceState.UnorderedAccess);
+            FlushResourceBarriers();
+
             var cpuHandle = buffer.NativeUnorderedAccessView;
             var gpuHandle = GetGpuDescriptorHandle(cpuHandle);
 
@@ -1041,6 +1053,9 @@ namespace Stride.Graphics
 
             if (buffer.NativeUnorderedAccessView.Ptr == 0)
                 throw new ArgumentException("Expecting a Buffer supporting UAV", nameof(buffer));
+
+            using var _ = ResourceBarrierTransitionAndRestore(buffer, GraphicsResourceState.UnorderedAccess);
+            FlushResourceBarriers();
 
             var cpuHandle = buffer.NativeUnorderedAccessView;
             var gpuHandle = GetGpuDescriptorHandle(cpuHandle);
@@ -1066,6 +1081,9 @@ namespace Stride.Graphics
             if (buffer.NativeUnorderedAccessView.Ptr == 0)
                 throw new ArgumentException("Expecting a Buffer supporting UAV", nameof(buffer));
 
+            using var _ = ResourceBarrierTransitionAndRestore(buffer, GraphicsResourceState.UnorderedAccess);
+            FlushResourceBarriers();
+
             var cpuHandle = buffer.NativeUnorderedAccessView;
             var gpuHandle = GetGpuDescriptorHandle(cpuHandle);
 
@@ -1089,6 +1107,9 @@ namespace Stride.Graphics
 
             if (texture.NativeUnorderedAccessView.Ptr == 0)
                 throw new ArgumentException("Expecting texture supporting UAV", nameof(texture));
+
+            using var _ = ResourceBarrierTransitionAndRestore(texture, GraphicsResourceState.UnorderedAccess);
+            FlushResourceBarriers();
 
             var cpuHandle = texture.NativeUnorderedAccessView;
             var gpuHandle = GetGpuDescriptorHandle(cpuHandle);
@@ -1114,6 +1135,9 @@ namespace Stride.Graphics
             if (texture.NativeUnorderedAccessView.Ptr == 0)
                 throw new ArgumentException("Expecting texture supporting UAV", nameof(texture));
 
+            using var _ = ResourceBarrierTransitionAndRestore(texture, GraphicsResourceState.UnorderedAccess);
+            FlushResourceBarriers();
+
             var cpuHandle = texture.NativeUnorderedAccessView;
             var gpuHandle = GetGpuDescriptorHandle(cpuHandle);
 
@@ -1137,6 +1161,9 @@ namespace Stride.Graphics
 
             if (texture.NativeUnorderedAccessView.Ptr == 0)
                 throw new ArgumentException("Expecting texture supporting UAV", nameof(texture));
+
+            using var _ = ResourceBarrierTransitionAndRestore(texture, GraphicsResourceState.UnorderedAccess);
+            FlushResourceBarriers();
 
             var cpuHandle = texture.NativeUnorderedAccessView;
             var gpuHandle = GetGpuDescriptorHandle(cpuHandle);
@@ -1423,6 +1450,10 @@ namespace Stride.Graphics
             if (!sourceMultiSampledTexture.IsMultiSampled)
                 throw new ArgumentException("Source Texture is not a MSAA Texture", nameof(sourceMultiSampledTexture));
 
+            using var _1 = ResourceBarrierTransitionAndRestore(sourceMultiSampledTexture, GraphicsResourceState.ResolveSource);
+            using var _2 = ResourceBarrierTransitionAndRestore(destinationTexture, GraphicsResourceState.ResolveDestination);
+            FlushResourceBarriers();
+
             currentCommandList.NativeCommandList.ResolveSubresource(sourceMultiSampledTexture.NativeResource, (uint) sourceSubResourceIndex,
                                                                     destinationTexture.NativeResource, (uint) destinationSubResourceIndex,
                                                                     (Format)(format == PixelFormat.None ? destinationTexture.Format : format));
@@ -1616,6 +1647,10 @@ namespace Stride.Graphics
         {
             ArgumentNullException.ThrowIfNull(sourceBuffer);
             ArgumentNullException.ThrowIfNull(destinationBuffer);
+
+            using var _1 = ResourceBarrierTransitionAndRestore(sourceBuffer, GraphicsResourceState.CopySource);
+            using var _2 = ResourceBarrierTransitionAndRestore(destinationBuffer, GraphicsResourceState.CopyDestination);
+            FlushResourceBarriers();
 
             currentCommandList.NativeCommandList.CopyBufferRegion(destinationBuffer.NativeResource, (ulong) destinationOffsetInBytes,
                                                                   sourceBuffer.NativeResource, SrcOffset: 0, NumBytes: sizeof(uint));
