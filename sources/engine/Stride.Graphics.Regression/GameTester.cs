@@ -66,6 +66,10 @@ namespace Stride.Graphics.Regression
                 }
             }
 
+            // Reset the DXGI factory and adapter between tests to prevent WARP adapter state
+            // accumulation that leads to DXGI_ERROR_DEVICE_REMOVED after many device create/destroy cycles.
+            GraphicsAdapterFactory.Dispose();
+
 #elif STRIDE_PLATFORM_UWP
 
             throw new NotImplementedException();
