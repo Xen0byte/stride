@@ -13,6 +13,8 @@ using UIKit;
 using Stride.Games;
 #endif
 
+using System;
+using System.Diagnostics;
 using Stride.Core.Diagnostics;
 using Stride.Engine;
 
@@ -69,6 +71,10 @@ namespace Stride.Graphics.Regression
             // Reset the DXGI factory and adapter between tests to prevent WARP adapter state
             // accumulation that leads to DXGI_ERROR_DEVICE_REMOVED after many device create/destroy cycles.
             GraphicsAdapterFactory.Dispose();
+
+            // Log process memory for diagnostics (helps detect resource leaks across tests)
+            using var process = Process.GetCurrentProcess();
+            Logger.Info($"Process memory: working set={process.WorkingSet64 / 1024 / 1024}MB, private={process.PrivateMemorySize64 / 1024 / 1024}MB, GC={GC.GetTotalMemory(false) / 1024 / 1024}MB");
 
 #elif STRIDE_PLATFORM_UWP
 
