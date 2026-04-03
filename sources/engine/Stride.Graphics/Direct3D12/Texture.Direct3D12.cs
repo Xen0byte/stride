@@ -362,7 +362,7 @@ namespace Stride.Graphics
 
                 // Initialize NativeResourceState based on texture flags.
                 // DepthStencil and RenderTarget are write states valid as initial states for CreateCommittedResource.
-                // Other textures start in Common and are transitioned after creation.
+                // Other textures start in Common and are transitioned to their desired state after creation.
                 if (Usage == GraphicsResourceUsage.Staging)
                 {
                     NativeResourceState = ResourceStates.CopyDest;
@@ -375,13 +375,26 @@ namespace Stride.Graphics
                 {
                     NativeResourceState = ResourceStates.RenderTarget;
                 }
+                else if (ViewFlags.HasFlag(TextureFlags.ShaderResource))
+                {
+                    NativeResourceState = ResourceStates.PixelShaderResource | ResourceStates.NonPixelShaderResource;
+                }
+                else if (ViewFlags.HasFlag(TextureFlags.UnorderedAccess))
+                {
+                    NativeResourceState = ResourceStates.UnorderedAccess;
+                }
                 else
                 {
                     NativeResourceState = ResourceStates.Common;
                 }
 
                 var desiredResourceState = NativeResourceState;
-                var currentResourceState = desiredResourceState;
+                // Resources on default heaps must be created in Common state (except RT/DS)
+                var currentResourceState = (desiredResourceState == ResourceStates.DepthWrite
+                                         || desiredResourceState == ResourceStates.RenderTarget
+                                         || desiredResourceState == ResourceStates.CopyDest)
+                    ? desiredResourceState
+                    : ResourceStates.Common;
 
                 bool hasInitData = initialData?.Length > 0;
 
