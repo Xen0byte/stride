@@ -23,7 +23,7 @@ internal static class Module
 
         // Auto-configure SwiftShader ICD path for Vulkan software rendering
         if (Environment.GetEnvironmentVariable("STRIDE_GRAPHICS_SOFTWARE_RENDERING") == "1"
-            && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VK_ICD_FILENAMES")))
+            && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VK_DRIVER_FILES")))
         {
             // Walk up from assembly location to find the repo root (where build/ lives)
             var dir = AppContext.BaseDirectory;
@@ -32,7 +32,7 @@ internal static class Module
                 var icdPath = Path.Combine(dir, "build", "submodules", "deps", "swiftshader", "vk_swiftshader_icd.json");
                 if (File.Exists(icdPath))
                 {
-                    Environment.SetEnvironmentVariable("VK_ICD_FILENAMES", icdPath);
+                    Environment.SetEnvironmentVariable("VK_DRIVER_FILES", icdPath);
                     break;
                 }
                 dir = Path.GetDirectoryName(dir);
