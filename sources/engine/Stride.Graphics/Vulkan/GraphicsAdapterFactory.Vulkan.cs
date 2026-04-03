@@ -188,8 +188,10 @@ namespace Stride.Graphics
 
             NativeInstanceApi = GetApi(NativeInstance);
 
-            // Create debug messenger only if the extension was actually enabled
-            if (enableDebugReport)
+            // Create debug messenger only if the extension was actually enabled and the function is available.
+            // The Vulkan loader may advertise VK_EXT_debug_utils but fail to provide the function
+            // if no validation layers are installed.
+            if (enableDebugReport && NativeInstanceApi.vkCreateDebugUtilsMessengerEXT_ptr != default)
             {
                 var createInfo = new VkDebugUtilsMessengerCreateInfoEXT
                 {
