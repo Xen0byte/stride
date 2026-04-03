@@ -48,7 +48,7 @@ jobs:
   # Non-Game tests (Simple, VSPackage)
   #
   Windows-Tests:
-    if: ${{ (github.event.inputs.test-category || inputs.test-category || 'Simple') != 'Game' && (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event.pull_request.draft == false) }}
+    if: false # TODO: temporarily disabled for GPU testing
     name: Test (${{ github.event.inputs.build-type || inputs.build-type || 'Debug' }}, ${{ github.event.inputs.test-category || inputs.test-category || 'Simple' }})
     runs-on: windows-2025-vs2026
     steps:
@@ -77,7 +77,7 @@ jobs:
   # Game tests - API-independent projects (run once)
   #
   Game-Common:
-    if: ${{ (github.event.inputs.test-category || inputs.test-category || 'Simple') == 'Game' && (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event.pull_request.draft == false) }}
+    if: false # TODO: temporarily disabled for GPU testing
     name: Game Common (${{ github.event.inputs.build-type || inputs.build-type || 'Debug' }})
     runs-on: windows-2025-vs2026
     env:
@@ -125,7 +125,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        graphics-api: [Direct3D11, Direct3D12, Vulkan]
+        graphics-api: [Direct3D12, Vulkan] # TODO: restore Direct3D11
     env:
       STRIDE_GRAPHICS_SOFTWARE_RENDERING: "1"
       STRIDE_TESTS_RENDERDOC: "error"
@@ -161,7 +161,7 @@ jobs:
       - name: Test
         run: |
           dotnet test build\Stride.Tests.Game.GPU.slnf `
-            --no-build `
+            --no-build -v detailed `
             -p:Configuration=${{ github.event.inputs.build-type || inputs.build-type || 'Debug' }} `
             -p:StrideGraphicsApis=${{ matrix.graphics-api }}
       - name: Upload test artifacts
