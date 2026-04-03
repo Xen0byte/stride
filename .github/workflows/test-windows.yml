@@ -145,7 +145,10 @@ jobs:
         run: |
           git submodule update --init build/submodules/deps
           $icdPath = (Resolve-Path "build\submodules\deps\swiftshader\vk_swiftshader_icd.json").Path
-          echo "VK_ICD_FILENAMES=$icdPath" >> $env:GITHUB_ENV
+          # Register SwiftShader ICD in registry — the Vulkan loader ignores VK_ICD_FILENAMES
+          # and VK_DRIVER_FILES when running with elevated permissions (as on GH Actions runners).
+          New-Item -Path "HKLM:\SOFTWARE\Khronos\Vulkan\Drivers" -Force | Out-Null
+          New-ItemProperty -Path "HKLM:\SOFTWARE\Khronos\Vulkan\Drivers" -Name $icdPath -Value 0 -PropertyType DWord -Force | Out-Null
       - name: Build
         run: |
           dotnet build build\Stride.Tests.Game.GPU.slnf `
