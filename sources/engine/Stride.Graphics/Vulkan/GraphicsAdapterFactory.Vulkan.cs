@@ -188,8 +188,8 @@ namespace Stride.Graphics
 
             NativeInstanceApi = GetApi(NativeInstance);
 
-            // Check if validation layer was available (otherwise detected count is 0)
-            if (enableValidation)
+            // Create debug messenger only if the extension was actually enabled
+            if (enableDebugReport)
             {
                 var createInfo = new VkDebugUtilsMessengerCreateInfoEXT
                 {
